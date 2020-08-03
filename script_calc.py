@@ -4,22 +4,23 @@ import numpy as np
 import math
 from scipy.integrate import odeint
 
-# Thermal capacitance of water (J / K * kg)
-# https://www.usgs.gov/special-topic/water-science-school/science/heat-capacity-and-water?qt-science_center_objects=0#qt-science_center_objects
-# 0.355 kg == 355 mL
-c_4 = 4184
-m_water = 0.355
-C_4 = c_4 * m_water
-
 # Room temperature (K)
 T_room = 22 + 273
 
 """ MUG DIMENSIONS (m) """
-diameter_inner = 0.12
-diameter_outer = 0.15
+diameter_inner = 0.05
+diameter_outer = 0.07
 thickness_stainless_steel = 0.002
-length_inner = 0.17
+length_inner = 0.18
 length_outer = 0.20
+
+# Inner volume = 353.43 mL. Assume 350 mL == 0.350 kg
+m_water = 0.350
+
+# Thermal capacitance of water (J / K * kg)
+# https://www.usgs.gov/special-topic/water-science-school/science/heat-capacity-and-water?qt-science_center_objects=0#qt-science_center_objects
+c_4 = 4184
+C_4 = c_4 * m_water
 
 diameter_air = diameter_outer - 2 * thickness_stainless_steel
 thickness_air = diameter_outer - diameter_inner - thickness_stainless_steel
