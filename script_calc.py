@@ -76,15 +76,21 @@ R_ref = 100
 alpha = 0.0004
 T_ref = 20 + 273
 
-# Voltage of the thermos electrical circuit (V)
-V_1 = 9
+# Initial voltage of the thermos electrical circuit (V)
+V_1 = 13
+
+# Calculate Voltage of Battery
+def battery_voltage(t):
+    voltage = -1 / 1400 * (t / 360 - 6) ** 3 + 4 + V_1
+    return 0 if voltage < 3 else voltage
+
 
 # function that returns dtemp/dt
 def model(temp, t):
 
     # https://www.cirris.com/learning-center/general-testing/special-topics/177-temperature-coefficient-of-copper
     R_2 = R_ref * (1 + alpha * (temp - T_ref))
-    dtemp_dt = -(temp - T_room) / (C_4 * R_5) + (V_1 ** 2) / (C_4 * R_2)
+    dtemp_dt = -(temp - T_room) / (C_4 * R_5) + (battery_voltage(t) ** 2) / (C_4 * R_2)
     return dtemp_dt
 
 
@@ -100,7 +106,6 @@ temp = odeint(model, temp0, t)
 """ PLOT RESULTS """
 # Removes 273 K offset, converting it to C
 plt.plot(t, tuple(np.subtract(temp, tuple([273] for _ in range(len(temp))))))
-plt.title("Thermos Temperature over time")
 plt.xlabel("Time (s)")
 plt.ylabel("Temperature (\xb0C)")
 plt.show()
