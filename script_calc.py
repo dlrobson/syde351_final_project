@@ -11,8 +11,8 @@ T_room = 22 + 273
 diameter_inner = 0.05
 diameter_outer = 0.07
 thickness_stainless_steel = 0.002
-length_inner = 0.18
-length_outer = 0.20
+length_inner = 0.184
+length_outer = 0.204
 
 # Inner volume = 353.43 mL. Assume 350 mL == 0.350 kg
 m_water = 0.350
@@ -22,8 +22,8 @@ m_water = 0.350
 c_4 = 4184
 C_4 = c_4 * m_water
 
-diameter_air = diameter_outer - 2 * thickness_stainless_steel
-thickness_air = diameter_outer - diameter_inner - thickness_stainless_steel
+diameter_air = diameter_inner + 2 * thickness_stainless_steel
+thickness_air = diameter_outer - diameter_inner - 2 * thickness_stainless_steel
 length_air = length_outer - 2 * thickness_stainless_steel
 
 """ INNER STAINLESS STEEL LAYER THERMAL RESISTANCE"""
@@ -77,28 +77,50 @@ alpha = 0.0004
 T_ref = 20 + 273
 
 # Initial voltage of the thermos electrical circuit (V)
-V_1 = 13
+V_1 = 10
 
 # Calculate Voltage of Battery
 def battery_voltage(t):
     voltage = -1 / 1400 * (t / 360 - 6) ** 3 + 4 + V_1
-    return 0 if voltage < 3 else voltage
+    return 0 if voltage < 0 else voltage
 
 
 # function that returns dtemp/dt
-def model(temp, t):
+def model(temp_vals, t):
 
     # https://www.cirris.com/learning-center/general-testing/special-topics/177-temperature-coefficient-of-copper
-    R_2 = R_ref * (1 + alpha * (temp - T_ref))
-    dtemp_dt = -(temp - T_room) / (C_4 * R_5) + (battery_voltage(t) ** 2) / (C_4 * R_2)
+    R_2 = R_ref * (1 + alpha * (temp_vals - T_ref))
+    dtemp_dt = -(temp_vals - T_room) / (C_4 * R_5) + (battery_voltage(t) ** 2) / (
+        C_4 * R_2
+    )
     return dtemp_dt
+
+
+def model_resistance(temp_vals):
+    resistance_val = ()
+    for t in temp_vals:
+        resistance_val = resistance_val + (R_ref * (1 + alpha * (t - T_ref)),)
+
+    return resistance_val
+
+
+def model_power(time, temp_vals):
+    power_output_vals = ()
+    resistance_vals = model_resistance(temp_vals)
+
+    for i in range(len(time)):
+        power_output_vals = power_output_vals + (
+            battery_voltage(time[i]) ** 2 / resistance_vals[i],
+        )
+
+    return power_output_vals
 
 
 # IC temp0 in K
 temp0 = 100 + 273
 
 # Time points
-t = np.linspace(0, 20000)
+t = np.linspace(0, 80000)
 
 # Solve ODE
 temp = odeint(model, temp0, t)
@@ -108,4 +130,21 @@ temp = odeint(model, temp0, t)
 plt.plot(t, tuple(np.subtract(temp, tuple([273] for _ in range(len(temp))))))
 plt.xlabel("Time (s)")
 plt.ylabel("Temperature (\xb0C)")
+plt.grid(b=True, which="major", linestyle="--")
+plt.show()
+
+# Temperature effect on Resistance Graph
+resistance = model_resistance(temp)
+plt.plot(t, resistance)
+plt.xlabel("Time (s)")
+plt.ylabel("Resistance (Ohms)")
+plt.grid(b=True, which="major", linestyle="--")
+plt.show()
+
+# Power output over time
+power_output = model_power(t, temp)
+plt.plot(t, power_output)
+plt.xlabel("Time (s)")
+plt.ylabel("Power Output (W)")
+plt.grid(b=True, which="major", linestyle="--")
 plt.show()
